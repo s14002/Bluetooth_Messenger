@@ -1,0 +1,24 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="jp.ac.it_college.std.s14002.android.bluetoothmessenger.MainActivity">
+    <item
+        android:id="@+id/connection_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:title="@string/connection_settings"
+        />
+
+    <item
+        android:id="@+id/name_settings"
+        android:orderInCategory="100"
+        android:title="@string/name_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/quit"
+        android:orderInCategory="100"
+        android:title="@string/quit"
+        app:showAsAction="never" />
+
+</menu>

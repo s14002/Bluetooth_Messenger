@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Bluetooth Messenger</string>
+    <string name="connection_settings">Connect/Disconnect</string>
+    <string name="name_settings">名前設定</string>
+    <string name="quit">終了</string>
+    <string name="tv_member">member</string>
+    <string name="tv_log">log</string>
+    <string name="please_input">入力してください</string>
+    <string name="send">送信</string>
+
+    <!--bt is Bluetooth-->
+    <string name="bt_is_enabled">BluetoothをONにしました。</string>
+    <string name="bt_needs_to_be_enabled">Bluetoothを有効にする必要があります</string>
+    <string name="problem_at_connecting">Bluetoothが接続を開始できません</string>
+    <string name="select_device">デバイスを選択</string>
+    <string name="title_paired_devices">接続履歴のあるデバイス</string>
+    <string name="title_other_devices">その他のデバイス</string>
+    <string name="title_none_devices">接続履歴のあるデバイスはありません</string>
+    <string name="button_scan">デバイスをスキャン</string>
+    <string name="none_found">デバイスが見つかりません</string>
+    <string name="scanning">スキャン中</string>
+    <string name="connecting_please_wait">接続中です ―n しばらくお待ちください</string>
+    <string name="pairing_message">ペアリングしてから接続してくだい</string>
+    <string name="no_paired_devices">ペアリングされたデバイスがありません</string>
+    <string name="bt_error_dialog_title">Bluetoothエラー</string>
+    <string name="bt_error_dialog_message">デバイスに接続できません</string>
+    <string name="problem_at_closing">接続を閉じるときに問題が発生しました</string>
+    <string name="connected">接続しました</string>
+    <string name="bt_available">Bluetoothは利用できます</string>
+    <string name="bt_is_not_available">Bluetoothが非対応です</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="start_scan">スキャン開始</string>
+    <string name="finish_scan">スキャン終了</string>
+    <string name="quit_message">アプリを終了しました</string>
+</resources>
