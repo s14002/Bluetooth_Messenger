@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:background="#666"
         android:paddingLeft="5dp"
-        android:text="@string/title_paired_devices"
+        android:text="@string/title_paired"
         android:textColor="#fff"
         android:visibility="gone" />
 
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:background="#666"
         android:paddingLeft="5dp"
-        android:text="@string/title_other_devices"
+        android:text="@string/title_other"
         android:textColor="#fff"
         android:visibility="gone" />
 
@@ -40,13 +40,14 @@
         android:background="@android:color/white"
         android:stackFromBottom="true" />
 
+    <!--
     <TextView
         android:id="@+id/title_none_devices"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#666"
         android:paddingLeft="5dp"
-        android:text="@string/title_none_devices"
+        android:text="@string/title_none_paired"
         android:textColor="#fff"
         android:visibility="gone"
         />
@@ -62,7 +63,7 @@
 
 
     </ListView>
-
+-->
     <Button
         android:id="@+id/button_scan"
         android:layout_width="match_parent"

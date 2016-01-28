@@ -8,6 +8,7 @@
     android:fitsSystemWindows="true"
     tools:context="jp.ac.it_college.std.s14002.android.bluetoothmessenger.MainActivity">
 
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
@@ -18,43 +19,52 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="#2196F3"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
 
     <LinearLayout
-        android:id="@+id/member_layout"
-        android:layout_width="100dp"
-        android:layout_height="match_parent"
-        android:background="#66ff0000"
-        android:orientation="vertical"
-        >
-
-        <TextView
-            android:id="@+id/member_view"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:text="@string/tv_member" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/log_layout"
+        android:id="@+id/nesting_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_toRightOf="@id/member_layout"
-        android:background="#84ff00"
-        android:orientation="vertical">
+        android:layout_alignTop="@+id/input_text"
+        android:layout_below="@+id/app_bar_layout"
+        android:layout_marginBottom="48dp"
+        android:orientation="horizontal">
+
+        <!--<LinearLayout
+            android:id="@+id/member_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+-->
+        <TextView
+            android:id="@+id/member_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#64B5F6"
+            android:text="@string/tv_member" />
+
+        <!--</LinearLayout>-->
+
+        <!--<LinearLayout
+            android:id="@+id/log_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">-->
 
         <TextView
             android:id="@+id/log_view"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="3" />
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:background="#90CAF9"
+            android:text="@string/tv_log" />
+        <!--</LinearLayout>-->
+
     </LinearLayout>
 
 
@@ -62,25 +72,30 @@
         android:id="@+id/input_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/log_layout"
+
+
         android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/log_layout"
-        android:background="#06f4ec"
+        android:layout_below="@+id/member_view"
+        android:background="#E3F2FD"
         android:orientation="horizontal">
 
         <EditText
             android:id="@+id/input_text"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="@string/please_input" />
-
+            android:hint="@string/please_input"
+            android:textColorHighlight="#000" />
+        <!--Buttonのレイアウトが崩れているかもしれない-->
         <Button
             android:id="@+id/bt_send"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="4"
-            android:text="@string/send" />
+            android:background="#1E88E5"
+            android:text="@string/send"
+            android:textColor="#fff" />
+
 
     </LinearLayout>
 

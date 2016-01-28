@@ -13,13 +13,13 @@
     <string name="bt_needs_to_be_enabled">Bluetoothを有効にする必要があります</string>
     <string name="problem_at_connecting">Bluetoothが接続を開始できません</string>
     <string name="select_device">デバイスを選択</string>
-    <string name="title_paired_devices">接続履歴のあるデバイス</string>
-    <string name="title_other_devices">その他のデバイス</string>
-    <string name="title_none_devices">接続履歴のあるデバイスはありません</string>
+    <string name="title_paired">接続履歴のあるデバイス</string>
+    <string name="title_other">その他のデバイス</string>
+    <string name="none_paired">接続履歴のあるデバイスはありません</string>
     <string name="button_scan">デバイスをスキャン</string>
     <string name="none_found">デバイスが見つかりません</string>
     <string name="scanning">スキャン中</string>
-    <string name="connecting_please_wait">接続中です ―n しばらくお待ちください</string>
+    <string name="connecting_please_wait">接続中です\nしばらくお待ちください</string>
     <string name="pairing_message">ペアリングしてから接続してくだい</string>
     <string name="no_paired_devices">ペアリングされたデバイスがありません</string>
     <string name="bt_error_dialog_title">Bluetoothエラー</string>

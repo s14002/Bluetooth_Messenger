@@ -27,14 +27,12 @@
             </intent-filter>
         </activity>
 
-        <!-- write activity tag here -->
 
         <activity
             android:name=".DeviceListActivity"
             android:label="@string/select_device"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Dialog"></activity>
-        <activity android:name=".BTCommunicator"></activity>
+            android:theme="@android:style/Theme.Dialog"/>
     </application>
 
 </manifest>
