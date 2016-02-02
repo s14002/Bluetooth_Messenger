@@ -1,10 +1,11 @@
 package jp.ac.it_college.std.s14002.android.bluetoothmessenger;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,112 +15,45 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    public static final int MENU_TOGGLE_CONNECT = Menu.FIRST;
     private static final int REQUEST_CONNECT_DEVICE = 1000;
     private static final int REQUEST_ENABLE_BT = 2000;
     static String TAG = "Menu";
-    private BluetoothAdapter bluetoothAdapter = null;
-    private BTCommunicator myBTCommunicator = null;
+    boolean newDevice;
+    private ReadWriteModel myReadWriteModel = null;
     private ProgressDialog connectingProgressDialog;
     private boolean connected = false;
     private boolean bt_error_pending = false;
     private Handler btcHandler;
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-
-            case REQUEST_CONNECT_DEVICE:
-                if (resultCode == Activity.RESULT_OK) {
-                    String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-                    /*
-                    newDevice = data.getExtras().getBoolean(DeviceListActivity.PAIRING);
-                    if (newDevice == true) {
-                        enDiscoverable();
-                    }
-                    */
-                    startBTCommunicator(address);
-                }
-                break;
-
-            case REQUEST_ENABLE_BT:
-                switch (resultCode) {
-
-                    //BluetoothがONにされた場合の処理
-                    case Activity.RESULT_OK:
-//                        selectDevices();
-                        Toast.makeText(this, R.string.bt_is_enabled, Toast.LENGTH_LONG).show();
-                        break;
-
-                    //BluetoothがOFFにされた場合の処理
-                    case Activity.RESULT_CANCELED:
-                        Toast.makeText(this, R.string.bt_needs_to_be_enabled, Toast.LENGTH_LONG).show();
-                        finish();
-                        break;
-
-                    default:
-                        Toast.makeText(this, R.string.problem_at_connecting, Toast.LENGTH_LONG).show();
-                        finish();
-                        break;
-                }
-        }
-    }
-
-    private void startBTCommunicator(String address) {
-        connectingProgressDialog = ProgressDialog.show(this, "", getResources().getString(
-                R.string.connecting_please_wait), true);
-
-        if (myBTCommunicator == null) {
-            createBTCommunicator();
-        }
-
-       /*
-       switch ((myBTCommunicator).getState()) {
-            case NEW:
-                myBTCommunicator.setMacAddress(address);
-                myBTCommunicator.start();
-                break;
-            default:
-                connected = false;
-                myBTCommunicator = null;
-                createBTCommunicator();
-                myBTCommunicator.setMacAddress(address);
-                myBTCommunicator.start();
-                break;
-        }*/
-        updateButtonAndMenu();
-    }
-
-    private void updateButtonAndMenu() {
-
-    }
-
-   /*
+    private Toast mShortToast;
+    //Menu
+    private Menu myMenu;
     final Handler myHandler = new Handler() {
         @Override
-        public void handleMessage(Message msg) {
-            switch (msg.getData().getInt("message")) {
-                case BTCommunicator.STATE_CONNECTED:
+        public void handleMessage(Message myMessage) {
+            switch (myMessage.getData().getInt("message")) {
+                case ReadWriteModel.STATE_CONNECTED:
                     connected = true;
                     connectingProgressDialog.dismiss();
-                    updateButtonAndMenu();
+                    updateButtonsAndMenu();
                     showToastLong(getResources().getString(R.string.connected));
-                    showPicture();
+
                     break;
-                case BTCommunicator.STATE_CONNECTERROR:
+                case ReadWriteModel.STATE_CONNECTERROR:
                     connectingProgressDialog.dismiss();
                     break;
 
-                case  BTCommunicator.CONNECT_RECCEIVEERORR:
-                case BTCommunicator.STATE_SENDERROR:
-                    destoryBTCommunicator();
+                case ReadWriteModel.STATE_RECEIVEERROR:
+                case ReadWriteModel.STATE_SENDERROR:
+                    destroyReadWriteModel();
 
-                    if (bt_error_pending == false) {
+                    if (!bt_error_pending) {
                         bt_error_pending = true;
-                        DialogFragment newFragment = MyAlertFragment.newInstance(
+                        DialogFragment newFragment = MyAlertDialogFragment.newInstance(
                                 R.string.bt_error_dialog_title, R.string.bt_error_dialog_message);
                         newFragment.show(getFragmentManager(), "dialog");
                     }
@@ -128,14 +62,136 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
-    } ;
-*/
+    };
 
-    private void createBTCommunicator() {
-       /*
-        myBTCommunicator = new BTCommunicator(this, myHandler, BluetoothAdapter.getDefaultAdapter());
-        btcHandler = myBTCommunicator.getHandler();
-        */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+
+            case REQUEST_CONNECT_DEVICE:
+                if (resultCode == Activity.RESULT_OK) {
+                    String macAddress = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+
+                    newDevice = data.getExtras().getBoolean(DeviceListActivity.PAIRING);
+                    if (newDevice) {
+                        enDiscoverable();
+                    }
+                    startReadWriteModel(macAddress);
+                }
+                break;
+
+            case REQUEST_ENABLE_BT:
+                switch (resultCode) {
+
+                    //BluetoothがONにされた場合の処理
+                    case Activity.RESULT_OK:
+                        selectDevices();
+                        Toast.makeText(this, R.string.bt_is_enabled, Toast.LENGTH_SHORT).show();
+                        break;
+
+                    //BluetoothがOFFにされた場合の処理
+                    case Activity.RESULT_CANCELED:
+                        Toast.makeText(this, R.string.bt_needs_to_be_enabled, Toast.LENGTH_SHORT).show();
+                        finish();
+                        break;
+
+                    default:
+                        Toast.makeText(this, R.string.problem_at_connecting, Toast.LENGTH_SHORT).show();
+                        finish();
+                        break;
+                }
+        }
+    }
+
+    // connectingProgressのあとの処理をかく　
+    private void startReadWriteModel(String macAddress) {
+        connectingProgressDialog = ProgressDialog.show(this, "", getResources().getString(
+                R.string.connecting_please_wait), true);
+
+        if (myReadWriteModel == null) {
+            createReadWriteModel();
+        }
+
+
+        switch ((myReadWriteModel).getState()) {
+            case NEW:
+                myReadWriteModel.setMacAddress(macAddress);
+                myReadWriteModel.start();
+                break;
+            default:
+                connected = false;
+                myReadWriteModel = null;
+                createReadWriteModel();
+                myReadWriteModel.setMacAddress(macAddress);
+                myReadWriteModel.start();
+                break;
+        }
+
+        updateButtonsAndMenu();
+    }
+
+    public void doPositiveClick() {
+        bt_error_pending = false;
+        selectDevices();
+    }
+
+
+    private void destroyReadWriteModel() {
+        if (myReadWriteModel != null) {
+            sendBtcMessage(ReadWriteModel.NO_DELAY, ReadWriteModel.DISCONNECT);
+            myReadWriteModel = null;
+        }
+        connected = false;
+    }
+
+    public void sendBtcMessage(int delay, int message) {
+        Bundle myBundle = new Bundle();
+        myBundle.putInt("message", message);
+        Message myMessage = myHandler.obtainMessage();
+        myMessage.setData(myBundle);
+
+        if (delay == 0)
+            btcHandler.sendMessage(myMessage);
+        else
+            btcHandler.sendMessageDelayed(myMessage, delay);
+    }
+
+    public void sendBtcMessage(int delay, int message, int value1) {
+        Bundle myBundle = new Bundle();
+        myBundle.putInt("message", message);
+        myBundle.putInt("value1", value1);
+        Message myMessage = myHandler.obtainMessage();
+        myMessage.setData(myBundle);
+
+        if (delay == 0)
+            btcHandler.sendMessage(myMessage);
+        else
+            btcHandler.sendMessageDelayed(myMessage, delay);
+    }
+
+    public void sendBtcMessage(int delay, int message, int value1, int value2) {
+        Bundle myBundle = new Bundle();
+        myBundle.putInt("message", message);
+        myBundle.putInt("value1", value1);
+        myBundle.putInt("value2", value2);
+        Message myMessage = myHandler.obtainMessage();
+        myMessage.setData(myBundle);
+
+        if (delay == 0)
+            btcHandler.sendMessage(myMessage);
+        else
+            btcHandler.sendMessageDelayed(myMessage, delay);
+    }
+
+    private void showToastLong(String textToShow) {
+        mShortToast.setText(textToShow);
+        mShortToast.show();
+    }
+
+    private void createReadWriteModel() {
+        myReadWriteModel = new ReadWriteModel(this, myHandler, BluetoothAdapter.getDefaultAdapter());
+        btcHandler = myReadWriteModel.getHandler();
     }
 
     private void enDiscoverable() {
@@ -151,34 +207,21 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-
-      /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-        */
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        myMenu = menu;
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        /*
-        menu.add(0, De          viceListActivity.MENU_SELECT_A, 0, R.string.connection_settings);
-        menu.add(0, DeviceListActivity.MENU_SELECT_B, 0, R.string.name_settings);
-        menu.add(0, DeviceListActivity.MENU_SELECT_C, 0, R.string.quit);
-*/
         return true;
 
     }
 
-    // TODO
+    @Override
+    protected void onStop() {
+        super.onStop();
+        destroyReadWriteModel();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -192,24 +235,31 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.quit:
                 Log.d(TAG, "Select quit");
-                // ここをダイアログに変えてはい/いいえの選択をさせたい
-                Toast.makeText(this, R.string.quit_message, Toast.LENGTH_SHORT).show();
-                finish();
+                displayAlertDialog();
                 break;
         }
         return true;
     }
 
-    /*
-    private void endTone() {
-        if (connected) {
-            playTone(1568, 1000);
-            playTone(1319, 500);
-        }
+    private void displayAlertDialog() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("確認");
+        alert.setMessage("アプリを終了しますか？");
+        alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                //Yesボタンが押された時の処理
+                finish();
+                Toast.makeText(MainActivity.this, R.string.quit_message, Toast.LENGTH_LONG).show();
+            }
+        });
+        alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                //Noボタンが押された時の処理
+            }
+        });
+        alert.show();
     }
-*/
 
-    /*
     private void updateButtonsAndMenu() {
         if (myMenu == null) return;
         myMenu.removeItem(MENU_TOGGLE_CONNECT);
@@ -219,41 +269,44 @@ public class MainActivity extends AppCompatActivity {
             myMenu.add(0, MENU_TOGGLE_CONNECT, 1, getResources().getString(R.string.connect));
         }
     }
-*/
+
 
     @Override
     protected void onStart() {
         super.onStart();
         //BluetoothAdapter取得
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        // If the adapter is null, then Bluetooth is not supported
         if (bluetoothAdapter != null) {
             //Bluetooth対応端末の場合の処理
-            Toast.makeText(this, R.string.bt_available, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.bt_available, Toast.LENGTH_SHORT).show();
         } else {
             //Bluetooth非対応端末の場合の処理
-            Toast.makeText(this, R.string.bt_is_not_available, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.bt_is_not_available, Toast.LENGTH_SHORT).show();
             finish();
         }
+        assert bluetoothAdapter != null;
         if (!bluetoothAdapter.isEnabled()) {
-            Toast.makeText(this, R.string.bt_needs_to_be_enabled, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.bt_needs_to_be_enabled, Toast.LENGTH_SHORT).show();
             // OFFだった場合、Bluetooth有効化ダイアログを表示
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-//            } else {
+        } else {
             // BluetoothがONだった場合の処理
-//                selectDevices();
+            selectDevices();
 
         }
     }
 
 
-
     private void selectDevices() {
-        Intent serverIntent = new Intent(this, DeviceListActivity.class);
-        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+        Intent intent = new Intent(this, DeviceListActivity.class);
+        startActivityForResult(intent, REQUEST_CONNECT_DEVICE);
     }
 
+    @Override
+    public void onClick(View v) {
+
+    }
 }
 

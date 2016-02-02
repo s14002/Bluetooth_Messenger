@@ -8,10 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -19,61 +16,33 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Set;
 
-public class DeviceListActivity extends AppCompatActivity {
-    //    public static final String OUI_OTHER_DEVICES = "00:16:53";
+public class DeviceListActivity extends Activity {
+    public static final String OUI_OTHER_DEVICES = "00:16:53";
     static final String PAIRING = "pairing";
-    //    private static final String TAG = "DeviceListActivity";
     public static String EXTRA_DEVICE_ADDRESS = "device_address";
     private BluetoothAdapter bluetoothAdapter;
-    private ArrayAdapter newDevicesAdapter;
+    private ArrayAdapter<String> pairedDevicesAdapter;
+    private ArrayAdapter<String> nonPairedDeviceAdapter;
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            String dName = null;
-            BluetoothDevice foundDevice;
-            ListView nonpairedList = (ListView) findViewById(R.id.nonPiredDeviceList);
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                Toast.makeText(context, R.string.start_scan, Toast.LENGTH_LONG).show();
-                //デバイスが検出された
-                foundDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if ((dName = foundDevice.getName()) != null) {
-                    if (foundDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
-                        //接続したことのないデバイスのみアダプタに詰める
-                        newDevicesAdapter.add(dName + "\n" + foundDevice.getAddress());
-                        Log.d("ACTION_FOUND", dName);
-                    }
-                }
-                nonpairedList.setAdapter(newDevicesAdapter);
-            }
-            if (BluetoothDevice.ACTION_NAME_CHANGED.equals(action)) {
-                //名前が検出された
-                Log.d("ACTION_NAME_CHENGED", dName);
-                foundDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (foundDevice.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    // 接続したことのないデバイスのみに詰める
-                    newDevicesAdapter.add(dName + "\n" + foundDevice.getAddress());
-                }
-                nonpairedList.setAdapter(newDevicesAdapter);
-            }
-            if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
-                Toast.makeText(context, R.string.finish_scan, Toast.LENGTH_LONG).show();
-
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-                //名前はまだ登録しない
-                if ((dName = device.getName()) != null) {
+                //名前不明はまだ登録しない
+                if (device.getName() != null) {
                     if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                        newDevicesAdapter.add(device.getName() + "\n" + device.getAddress());
+                        nonPairedDeviceAdapter.add(device.getName() + "\n" + device.getAddress());
                     }
                 }
+
+
             }
 
             //　名前が検出された
@@ -81,30 +50,33 @@ public class DeviceListActivity extends AppCompatActivity {
                 //インテントからデバイスを取得
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    newDevicesAdapter.add(device.getName() + "\n" + device.getAddress());
+                    nonPairedDeviceAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
             }
             // 発見終了
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 setProgressBarIndeterminateVisibility(false);
                 setTitle(R.string.select_device);
-                if (newDevicesAdapter.getCount() == 0) {
-                    String noDevices = getResources().getText(R.string.no_paired_devices).toString();
-                    newDevicesAdapter.add(noDevices);
+                if (nonPairedDeviceAdapter.getCount() == 0) {
+                    String noDevices = getResources().getText(R.string.none_found).toString();
+                    nonPairedDeviceAdapter.add(noDevices);
                 }
             }
 
         }
     };
+    private String myNumber;
     private AdapterView.OnItemClickListener deviceClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
 
             bluetoothAdapter.cancelDiscovery();
             String info = ((TextView) v).getText().toString();
-            String address = info.substring(info.length() - 17);
+            Log.e("DeviceListActivity", info);
+            String macAddress = info.substring(info.length() - 17);
+            Log.e("DeviceListActivity" , macAddress);
             Intent intent = new Intent();
             Bundle data = new Bundle();
-            data.putString(EXTRA_DEVICE_ADDRESS, address);
+            data.putString(EXTRA_DEVICE_ADDRESS, macAddress);
             data.putBoolean(PAIRING, av.getId() == R.id.other_devices);
             intent.putExtras(data);
 
@@ -113,38 +85,12 @@ public class DeviceListActivity extends AppCompatActivity {
         }
     };
 
-
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        //オプションメニューが選択された時の処理
-        TextView nonPairedListTitle = (TextView) findViewById(R.id.title_none_devices);
-        nonPairedListTitle.setText("接続履歴なしデバイスリスト");
-
-        //自デバイスの検出を有効にする
-        Intent discoverableOn = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableOn.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-        startActivity(discoverableOn);
-
-        if (item.getItemId() == Menu.FIRST) {
-            //インテントフィルターとBroadReceiverの登録
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-            filter.addAction(BluetoothDevice.ACTION_FOUND);
-            filter.addAction(BluetoothDevice.ACTION_NAME_CHANGED);
-            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-            registerReceiver(receiver, filter);
-
-            newDevicesAdapter = new ArrayAdapter(this, R.layout.activity_device_list);
-            //接続可能なデバイスを検出
-            if (bluetoothAdapter.isDiscovering()) {
-                //検出中の場合は検出をキャンセルする
-                bluetoothAdapter.cancelDiscovery();
-            }
-            //デバイスを検索する
-            bluetoothAdapter.startDiscovery();
-        }
-
-        return false;
+    protected void onResume() {
+        super.onResume();
+        //サーバースレッド起動、クライアントのからの要求待ちを開始
+        BluetoothServerThread BtServerThread = new BluetoothServerThread(this, myNumber, bluetoothAdapter);
+        BtServerThread.start();
     }
 
     @Override
@@ -157,6 +103,7 @@ public class DeviceListActivity extends AppCompatActivity {
 
         setResult(Activity.RESULT_CANCELED);
 
+
         //デバイスをスキャンボタンが押された時の処理
         Button scanButton = (Button) findViewById(R.id.button_scan);
         scanButton.setOnClickListener(new View.OnClickListener() {
@@ -168,18 +115,23 @@ public class DeviceListActivity extends AppCompatActivity {
             }
         });
 
-        ArrayAdapter<String> pairedDevicesAdapter = new ArrayAdapter<>(this, R.layout.device_name);
-        newDevicesAdapter = new ArrayAdapter<>(this, R.layout.device_name);
 
-        ListView pairedList = (ListView) findViewById(R.id.paired_devices);
-        pairedList.setAdapter(pairedDevicesAdapter);
-        pairedList.setOnItemClickListener(deviceClickListener);
+        // 接続履歴のあるデバイスを取得
+        pairedDevicesAdapter = new ArrayAdapter<>(this, R.layout.device_name);
+
+        nonPairedDeviceAdapter = new ArrayAdapter<>(this, R.layout.device_name);
+
+        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
+        pairedListView.setAdapter(pairedDevicesAdapter);
+        pairedListView.setOnItemClickListener(deviceClickListener);
 
         ListView newDevicesListView = (ListView) findViewById(R.id.other_devices);
-        newDevicesListView.setAdapter(newDevicesAdapter);
+        newDevicesListView.setAdapter(nonPairedDeviceAdapter);
         newDevicesListView.setOnItemClickListener(deviceClickListener);
 
+        //インテントフィルターとBroadReceiverの登録
         IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothDevice.ACTION_NAME_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -187,21 +139,28 @@ public class DeviceListActivity extends AppCompatActivity {
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+
         //BluetoothAdapterから接続履歴のあるデバイスの情報を取得
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-//        boolean otherDeviceFound = false;
+        boolean devicesFound = false;
+        findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
         if (pairedDevices.size() > 0) {
-            findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             //接続履歴のあるデバイスが存在する
             for (BluetoothDevice device : pairedDevices) {
-                pairedDevicesAdapter.add(device.getName() + "\n" + device.getAddress());
+                if (device.getAddress().startsWith(OUI_OTHER_DEVICES)) {
+                    devicesFound = true;
+                    pairedDevicesAdapter.add(device.getName() + "\n" + device.getAddress());
+                }
+
             }
+
         }
 
-        /*if (otherDeviceFound) {
+        if (!devicesFound) {
             String noDevices = getResources().getText(R.string.none_paired).toString();
             pairedDevicesAdapter.add(noDevices);
-        }*/
+
+        }
 
     }
 
